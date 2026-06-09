@@ -1,2 +1,0 @@
-# keepushuman
-transversales
