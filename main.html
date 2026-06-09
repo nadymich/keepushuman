@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autoevaluación — Habilidades Transversales</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f5f5f3;
+      --text-primary: #1a1a18;
+      --text-secondary: #5f5e5a;
+      --border: rgba(0,0,0,0.15);
+      --border-hover: rgba(0,0,0,0.3);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1a;
+        --bg-secondary: #2a2a28;
+        --text-primary: #f0ede8;
+        --text-secondary: #a0a09a;
+        --border: rgba(255,255,255,0.15);
+        --border-hover: rgba(255,255,255,0.3);
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .container { width: 100%; max-width: 640px; }
+
+    .header { margin-bottom: 2.5rem; }
+    .header h1 { font-size: 22px; font-weight: 500; color: var(--text-primary); margin-bottom: 0.4rem; }
+    .header p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+    .progress-bar-bg { background: var(--bg-secondary); border-radius: 99px; height: 6px; margin-bottom: 0.5rem; }
+    .progress-bar-fill { height: 6px; border-radius: 99px; background: #7F77DD; transition: width 0.4s ease; }
+    .progress-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 1.5rem; }
+
+    .section-badge { display: inline-block; font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: var(--radius-md); margin-bottom: 1rem; }
+    .q-number { font-size: 13px; color: var(--text-secondary); margin-bottom: 0.4rem; }
+    .q-text { font-size: 17px; color: var(--text-primary); line-height: 1.65; margin-bottom: 1.5rem; }
+
+    .options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 2rem; }
+    .option-btn {
+      background: var(--bg);
+      border: 0.5px solid var(--border-hover);
+      border-radius: var(--radius-md);
+      padding: 11px 16px;
+      font-size: 14px;
+      color: var(--text-primary);
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .option-btn:hover { background: var(--bg-secondary); border-color: var(--border-hover); }
+    .option-btn.selected { border: 1.5px solid #7F77DD; background: #EEEDFE; color: #3C3489; }
+    .score-pill {
+      font-size: 11px; font-weight: 500;
+      background: var(--bg-secondary); color: var(--text-secondary);
+      border-radius: 99px; padding: 2px 8px; margin-left: auto; flex-shrink: 0;
+    }
+    .option-btn.selected .score-pill { background: #AFA9EC; color: #26215C; }
+
+    .nav { display: flex; justify-content: space-between; gap: 12px; }
+    .btn-nav {
+      background: transparent;
+      border: 0.5px solid var(--border-hover);
+      border-radius: var(--radius-md);
+      padding: 10px 24px;
+      font-size: 14px;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .btn-nav:hover { background: var(--bg-secondary); }
+    .btn-nav.primary { background: #7F77DD; border-color: #7F77DD; color: #fff; font-weight: 500; }
+    .btn-nav.primary:hover { background: #534AB7; }
+    .btn-nav:disabled { opacity: 0.35; cursor: default; pointer-events: none; }
+
+    .results { padding-top: 0.5rem; }
+    .result-title { font-size: 20px; font-weight: 500; color: var(--text-primary); margin-bottom: 0.4rem; }
+    .result-sub { font-size: 14px; color: var(--text-secondary); margin-bottom: 1.5rem; }
+
+    .scores-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-bottom: 1.5rem; }
+    .score-chip { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 10px 12px; text-align: center; }
+    .score-chip-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; line-height: 1.4; }
+    .score-chip-val { font-size: 22px; font-weight: 500; }
+
+    .chart-wrap { position: relative; width: 100%; height: 340px; margin-bottom: 1.5rem; }
+
+    .rec-card { border-radius: var(--radius-lg); padding: 1.25rem; margin-top: 0.5rem; }
+    .rec-label { font-size: 11px; font-weight: 500; margin-bottom: 8px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .rec-text { font-size: 14px; line-height: 1.75; }
+
+    .retry-btn {
+      margin-top: 2rem;
+      background: transparent;
+      border: 0.5px solid var(--border-hover);
+      border-radius: var(--radius-md);
+      padding: 10px 24px;
+      font-size: 14px;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+    .retry-btn:hover { background: var(--bg-secondary); }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>Autoevaluación de habilidades transversales</h1>
+    <p>Responde las 20 preguntas con honestidad. Al final verás tu perfil y una recomendación personalizada.</p>
+  </div>
+
+  <div id="quiz">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress" style="width:5%"></div></div>
+    <div class="progress-label" id="prog-label">Pregunta 1 de 20</div>
+    <div class="section-badge" id="section-badge"></div>
+    <div class="q-number" id="q-number"></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options"></div>
+    <div class="nav">
+      <button class="btn-nav" id="btn-back" onclick="goBack()">← Anterior</button>
+      <button class="btn-nav primary" id="btn-next" onclick="goNext()">Siguiente →</button>
+    </div>
+  </div>
+
+  <div id="results" style="display:none">
+    <div class="results">
+      <div class="result-title">Tu perfil de habilidades transversales</div>
+      <div class="result-sub">Puntaje del 1 al 5 por área</div>
+      <div class="scores-grid" id="scores-grid"></div>
+      <div class="chart-wrap">
+        <canvas id="radarChart" role="img" aria-label="Gráfico radial con puntajes por área de habilidades transversales"></canvas>
+      </div>
+      <div id="rec-area"></div>
+      <button class="retry-btn" onclick="restart()"><i class="ti ti-refresh" aria-hidden="true"></i> Volver a empezar</button>
+    </div>
+  </div>
+
+</div>
+<script>
+const areas = [
+  {
+    id:"critico", name:"P. crítico", fullName:"Pensamiento crítico",
+    color:"#534AB7", light:"#EEEDFE", text:"#26215C",
+    rec:"Te recomendamos enfocarte en fortalecer tu pensamiento crítico. Puedes comenzar a cuestionar activamente las fuentes de la información que consumes, buscar la opinión de alguien que piense distinto a ti antes de tomar decisiones importantes, y practicar el hábito de preguntarte \"¿por qué?\" al menos tres veces antes de aceptar una conclusión. Al final del día pregúntate: ¿tomé alguna decisión hoy basándome en suposiciones que no verifiqué?"
+  },
+  {
+    id:"creativo", name:"P. creativo", fullName:"Pensamiento creativo",
+    color:"#1D9E75", light:"#E1F5EE", text:"#04342C",
+    rec:"Te recomendamos enfocarte en fortalecer tu pensamiento creativo. Puedes comenzar a exponer tu mente a estímulos fuera de tu industria — un podcast de diseño, un libro de historia, una conversación con alguien de un campo completamente diferente — y cuando enfrentes un problema, obligarte a generar al menos tres soluciones antes de evaluar cuál es la más viable. Al final del día pregúntate: ¿conecté hoy alguna idea o aprendizaje de fuera de mi trabajo con un reto que tengo dentro de él?"
+  },
+  {
+    id:"sistemico", name:"P. sistémico", fullName:"Pensamiento sistémico",
+    color:"#BA7517", light:"#FAEEDA", text:"#412402",
+    rec:"Te recomendamos enfocarte en fortalecer tu pensamiento sistémico. Puedes comenzar a mapear visualmente las áreas o personas que se ven afectadas por las decisiones que tomas en tu rol, identificar al menos un patrón recurrente en los problemas que enfrenta tu equipo, y practicar mirar los retos de tu organización desde la perspectiva de otro departamento. Al final del día pregúntate: ¿identifiqué hoy algún patrón detrás de un problema, o solo reaccioné al síntoma más visible?"
+  },
+  {
+    id:"negocio", name:"P. de negocio", fullName:"Pensamiento de negocio",
+    color:"#D85A30", light:"#FAECE7", text:"#4A1B0C",
+    rec:"Te recomendamos enfocarte en fortalecer tu pensamiento de negocio. Puedes comenzar a familiarizarte con los indicadores clave de tu organización, traducir tu trabajo diario a resultados concretos — ahorro de tiempo, reducción de costos, aumento de ingresos — y practicar comunicar tus logros en términos de impacto, no de actividades. Al final del día pregúntate: ¿sé cómo lo que hice hoy contribuye a los resultados de la organización?"
+  },
+  {
+    id:"comunicacion", name:"Comunicación", fullName:"Comunicación",
+    color:"#185FA5", light:"#E6F1FB", text:"#042C53",
+    rec:"Te recomendamos enfocarte en fortalecer tu comunicación como herramienta para hacer visible tu valor profesional. Puedes comenzar a preparar con intención cada espacio donde tengas que presentar ideas — una reunión, un correo importante, una conversación con tu líder — eligiendo conscientemente qué quieres que tu interlocutor entienda, sienta o haga después de escucharte. Al final del día pregúntate: ¿quedó claro hoy lo que quise comunicar, o asumí que los demás entenderían sin que yo lo dijera?"
+  }
+];
+
+const questions = [
+  { area:"critico",      text:"Cuando recibo información nueva, me intereso en su origen y el contexto en el que fue generada." },
+  { area:"critico",      text:"Cuestiono el porqué de los argumentos o propuestas y busco entenderlo antes de apoyarlo." },
+  { area:"critico",      text:"Antes de tomar una decisión importante, discuto el problema con personas diferentes a mí." },
+  { area:"critico",      text:"Cuando algo falla, analizo todo el proceso, en vez de sustituir la pieza que falló." },
+  { area:"creativo",     text:"Cuando enfrento un problema sin solución obvia, me siento cómoda/o imaginando soluciones que quizá no son rentables ni viables." },
+  { area:"creativo",     text:"Consumo contenido de mi industria pero también de otros campos y encuentro inspiración a mis retos laborales en ello." },
+  { area:"creativo",     text:"Me siento cómodo/a cuando me impiden continuar con el desarrollo de una solución. Sé que puedo encontrar otra forma de resolverlo." },
+  { area:"creativo",     text:"Genero ideas con facilidad pero también sé filtrarlas y quedarme con las que realmente pueden implementarse." },
+  { area:"sistemico",    text:"Puedo explicar cómo una decisión en mi área puede afectar a otros equipos o departamentos de la organización." },
+  { area:"sistemico",    text:"Cuando analizo un problema, me pregunto qué consecuencias puede tener mi solución a mediano y largo plazo y dónde." },
+  { area:"sistemico",    text:"Identifico patrones o ciclos repetitivos en situaciones que otros ven como problemas aislados." },
+  { area:"sistemico",    text:"Entiendo cómo se relaciona la organización donde trabajo con la industria de la cuál forma parte, su espacio geográfico y político." },
+  { area:"negocio",      text:"Entiendo cómo mi rol contribuye directamente a los resultados o metas financieras de la organización." },
+  { area:"negocio",      text:"Cuando propongo una iniciativa, puedo estimar su impacto en costos, ingresos o eficiencia sin que me lo pidan." },
+  { area:"negocio",      text:"Cuando tomo decisiones, considero no solo lo técnico sino también la viabilidad comercial y el retorno de la inversión." },
+  { area:"negocio",      text:"Puedo hablar con liderazgo sobre mi trabajo en términos de impacto al negocio, no solo de tareas completadas." },
+  { area:"comunicacion", text:"Puedo explicar ideas complejas de forma clara y sencilla a personas con distinto desarrollo técnico." },
+  { area:"comunicacion", text:"En reuniones o presentaciones, logro que mi mensaje quede claro y sea adoptado por mis interlocutores." },
+  { area:"comunicacion", text:"Adapto mi estilo de comunicación según el interlocutor: no hablo igual con mi equipo que con la dirección." },
+  { area:"comunicacion", text:"Recibo retroalimentación positiva frecuente sobre cómo comunico mis ideas, ya sea por escrito o de forma oral." }
+];
+
+const optionLabels = ["Nunca o casi nunca","Pocas veces","A veces","Frecuentemente","Siempre o casi siempre"];
+const total = questions.length;
+let answers = new Array(total).fill(null);
+let current = 0;
+let radarInstance = null;
+
+function getArea(i) { return areas.find(a => a.id === questions[i].area); }
+
+function render() {
+  const area = getArea(current);
+  document.getElementById("progress").style.width = ((current+1)/total*100).toFixed(0)+"%";
+  document.getElementById("prog-label").textContent = "Pregunta "+(current+1)+" de "+total;
+  const badge = document.getElementById("section-badge");
+  badge.textContent = area.fullName;
+  badge.style.background = area.light;
+  badge.style.color = area.text;
+  document.getElementById("q-number").textContent = "Pregunta "+(current+1);
+  document.getElementById("q-text").textContent = questions[current].text;
+  const opts = document.getElementById("options");
+  opts.innerHTML = "";
+  optionLabels.forEach((l,i) => {
+    const btn = document.createElement("button");
+    btn.className = "option-btn" + (answers[current]===i+1 ? " selected" : "");
+    btn.innerHTML = `<span>${l}</span><span class="score-pill">${i+1}</span>`;
+    btn.onclick = () => { answers[current] = i+1; render(); };
+    opts.appendChild(btn);
+  });
+  document.getElementById("btn-back").disabled = current === 0;
+  const nxt = document.getElementById("btn-next");
+  nxt.textContent = current === total-1 ? "Ver resultados →" : "Siguiente →";
+  nxt.disabled = answers[current] === null;
+}
+
+function goNext() {
+  if(answers[current] === null) return;
+  if(current === total-1) { showResults(); return; }
+  current++; render();
+}
+function goBack() { if(current > 0) { current--; render(); } }
+
+function showResults() {
+  document.getElementById("quiz").style.display = "none";
+  document.getElementById("results").style.display = "block";
+
+  const scores = {};
+  areas.forEach(a => { scores[a.id] = { sum:0, count:0 }; });
+  questions.forEach((q,i) => { scores[q.area].sum += answers[i]; scores[q.area].count++; });
+  const avgs = areas.map(a => parseFloat((scores[a.id].sum / scores[a.id].count).toFixed(1)));
+
+  const grid = document.getElementById("scores-grid");
+  grid.innerHTML = "";
+  areas.forEach((a,i) => {
+    grid.innerHTML += `<div class="score-chip">
+      <div class="score-chip-label">${a.name}</div>
+      <div class="score-chip-val" style="color:${a.color}">${avgs[i].toFixed(1)}</div>
+    </div>`;
+  });
+
+  if(radarInstance) { radarInstance.destroy(); radarInstance = null; }
+
+  const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const gridColor = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
+  const labelColor = isDark ? "#a0a09a" : "#5f5e5a";
+
+  radarInstance = new Chart(document.getElementById("radarChart"), {
+    type: "radar",
+    data: {
+      labels: areas.map(a => a.name),
+      datasets: [{
+        data: avgs,
+        backgroundColor: "rgba(127,119,221,0.15)",
+        borderColor: "#7F77DD",
+        borderWidth: 2,
+        pointBackgroundColor: areas.map(a => a.color),
+        pointBorderColor: areas.map(a => a.color),
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          min: 0, max: 5,
+          ticks: { stepSize: 1, font: { size: 11 }, color: labelColor, backdropColor: "transparent" },
+          pointLabels: { font: { size: 12 }, color: labelColor },
+          grid: { color: gridColor },
+          angleLines: { color: gridColor }
+        }
+      }
+    }
+  });
+
+  const minIdx = avgs.indexOf(Math.min(...avgs));
+  const worst = areas[minIdx];
+  document.getElementById("rec-area").innerHTML = `
+    <div class="rec-card" style="background:${worst.light}">
+      <div class="rec-label" style="color:${worst.color}">Área a priorizar: ${worst.fullName}</div>
+      <p class="rec-text" style="color:${worst.text}">${worst.rec}</p>
+    </div>`;
+}
+
+function restart() {
+  answers = new Array(total).fill(null);
+  current = 0;
+  if(radarInstance) { radarInstance.destroy(); radarInstance = null; }
+  document.getElementById("results").style.display = "none";
+  document.getElementById("quiz").style.display = "block";
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
